@@ -5,6 +5,17 @@ class Activation:
     def sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
 
+    # def sigmoid(self,x):
+    #     "Numerically stable sigmoid function."
+    #     if x.all() >= 1:
+    #         z = np.exp(-x)
+    #         return 1 / (1 + z)
+    #     else:
+    #         # if x is less than zero then z will be small, denom can't be
+    #         # zero because it's 1+z.
+    #         z = np.exp(x)
+    #         return z / (1 + z)
+    #
     def softmax(self, x):
         exps = np.exp(x - x.max(axis=1, keepdims=True))
         return exps / np.sum(exps, axis=1, keepdims=True)
@@ -42,7 +53,7 @@ class Activation:
             'RELU'    : self.d_relu,
         }
         # if activation not in funcs:
-        #     raise TypeError("\nActivation function must be either:\n'SIGMOID'\n'SOFTMAX'\n'TANH'\n'RELU'")
+        # raise TypeError("\nActivation function must be either:\n'SIGMOID'\n'SOFTMAX'\n'TANH'\n'RELU'")
         self.func = {}
         self.deriv = {}
         for i in range(len(activation)):

@@ -110,6 +110,8 @@ def accuracy_metric(a,b):
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn import datasets
+from sklearn.preprocessing import StandardScaler
+
 ####################### DATA PROCESSING IMPORTS ################################
 
 
@@ -182,11 +184,10 @@ y = to_categorical_numpy(y)
 X_train, X_test, y_train, y_test = train_test_split(X,y,train_size=0.8,test_size=0.2)
 
 # SCALE DATA
-from sklearn.preprocessing import StandardScaler
 scaler = StandardScaler()
 scaler.fit(X_train)
-scaler.transform(X_train)
-scaler.transform(X_test)
+X_train = scaler.transform(X_train)
+x_test = scaler.transform(X_test)
 
 eta_vec = np.logspace(-5, 1, 7)
 lam_vec = np.logspace(-5, 1, 7)
