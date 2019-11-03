@@ -106,123 +106,121 @@ def to_categorical_numpy(integer_vector):
 def accuracy_metric(a,b):
     return accuracy_score(a,b)
 
-####################### DATA PROCESSING IMPORTS ################################
-import matplotlib.pyplot as plt
-import pandas as pd
-from sklearn import datasets
-from sklearn.preprocessing import StandardScaler
 
-####################### DATA PROCESSING IMPORTS ################################
+if __name__ == '__main__':
+    ####################### DATA PROCESSING IMPORTS ################################
+    import matplotlib.pyplot as plt
+    import pandas as pd
+    from sklearn import datasets
+    from sklearn.preprocessing import StandardScaler
 
-
-######################################################### MULTI CLASS ##########################################################
-#import MNSIT DATA
-# digits = datasets.load_digits()
-#
-# inputs = digits.images
-# labels = digits.target
-#
-# n_inputs = len(inputs)
-# inputs = inputs.reshape(n_inputs, -1) #reshape len, 64 from len,8,8
-#
-# labels = to_categorical_numpy(labels)
-# X_train, X_test, y_train, y_test = train_test_split(inputs,labels,train_size=0.99,test_size=0.01)
-#
-# categorical = LogisticRegression(X_train, y_train, X_test, y_test,  'SOFTMAX', iterations = 100000,eta = 0.0001,)
-# categorical.train()
-# accuracy, onehot, pred = categorical.predict_softmax()
-# np.set_printoptions(precision=4)
-# print(pred)
-#
-# print(accuracy)
-
-################################################ BINARY ###############################################################
-def load_data(path, header):
-    marks_df = pd.read_csv(path, header=header)
-    return marks_df
-# load the data from the file
-data = load_data("/Users/douglas/Fall_2019/filemovement/Machine-Learning/LogisticRegression/data/marks.txt", None)
+    ####################### DATA PROCESSING IMPORTS ################################
 
 
-##### THIS GIVES GOOD RESULTS SIGMOID#####
-# # X = feature values, all the columns except the last column
-# X = data.iloc[:, :-1]
-# # y = target values, last column of the data frame
-# y = data.iloc[:, -1]
-# # filter out the applicants that got admitted
-# admitted = data.loc[y == 1]
-# # filter out the applicants that din't get admission
-# not_admitted = data.loc[y == 0]
-# # data setup. Add column of ones to X
-# X = np.c_[np.ones((X.shape[0], 1)), X]
-# y = y[:, np.newaxis]
-# X_train, X_test, y_train, y_test = train_test_split(X,y,train_size=0.8,test_size=0.2)
+    ######################################################### MULTI CLASS ##########################################################
+    #import MNSIT DATA
+    # digits = datasets.load_digits()
+    #
+    # inputs = digits.images
+    # labels = digits.target
+    #
+    # n_inputs = len(inputs)
+    # inputs = inputs.reshape(n_inputs, -1) #reshape len, 64 from len,8,8
+    #
+    # labels = to_categorical_numpy(labels)
+    # X_train, X_test, y_train, y_test = train_test_split(inputs,labels,train_size=0.99,test_size=0.01)
+    #
+    # categorical = LogisticRegression(X_train, y_train, X_test, y_test,  'SOFTMAX', iterations = 100000,eta = 0.0001,)
+    # categorical.train()
+    # accuracy, onehot, pred = categorical.predict_softmax()
+    # np.set_printoptions(precision=4)
+    # print(pred)
+    #
+    # print(accuracy)
 
-# binary = LogisticRegression(X_train, y_train, X_test, y_test, 'SIGMOID', eta = 0.001, lambd = 0.001, epochs = 10000, batchs = 20)
-# binary.train()
-# accuracy, prediction = binary.predict_sigmoid()
-# results = np.c_[prediction, y_test]
-# print(accuracy)
-# print(results)
-
-##################################
-
-# X = feature values, all the columns except the last column
-X = data.iloc[:, :-1]
-# y = target values, last column of the data frame
-y = data.iloc[:, -1]
-# filter out the applicants that got admitted
-admitted = data.loc[y == 1]
-# filter out the applicants that din't get admission
-not_admitted = data.loc[y == 0]
-
-# data setup. DO NOT add 1's since we are using softmax
-X = np.array(X)
-y = to_categorical_numpy(y)
-
-# TRAINING AND TEST DATA
-X_train, X_test, y_train, y_test = train_test_split(X,y,train_size=0.8,test_size=0.2)
-
-# SCALE DATA
-scaler = StandardScaler()
-scaler.fit(X_train)
-X_train = scaler.transform(X_train)
-x_test = scaler.transform(X_test)
-
-eta_vec = np.logspace(-5, 1, 7)
-lam_vec = np.logspace(-5, 1, 7)
-test_accuracy = np.zeros((len(eta_vec), len(lam_vec)))
-
-for i, eta in enumerate(eta_vec):
-    for j, lam in enumerate(lam_vec):
-        binary = LogisticRegression(X_train, y_train, X_test, y_test, 'SOFTMAX', eta = eta,
-                                    lambd = lam, epochs = 100, batchs = 20)
-        binary.train()
-        binary.predict()
-        binary.score_one_hot()
-        accuracy = accuracy_metric(binary._one_hot_score, y_test)
-        test_accuracy[i][j] = accuracy
-
-import seaborn as sns
-sns.set()
-fig, ax = plt.subplots(figsize = (10, 10))
-sns.heatmap(test_accuracy, annot=True, ax=ax, cmap="viridis")
-ax.set_title("Test Accuracy")
-ax.set_ylabel("$\eta$")
-ax.set_xlabel("$\lambda$")
-plt.show()
-
-# np.set_printoptions(precision=4)
-# print('BEFORE SOFTMAX= \n', binary._predict)
-# print('prediction accuracy= ', accuracy)
-# print('predicted catagories= \n', binary._one_hot_score)
-# print('true catgeories= \n', y_test)
-
-################################################ BINARY ###############################################################
+    ################################################ BINARY ###############################################################
+    def load_data(path, header):
+        marks_df = pd.read_csv(path, header=header)
+        return marks_df
+    # load the data from the file
+    data = load_data("/Users/douglas/Fall_2019/filemovement/Machine-Learning/LogisticRegression/data/marks.txt", None)
 
 
+    ##### THIS GIVES GOOD RESULTS SIGMOID#####
+    # # X = feature values, all the columns except the last column
+    # X = data.iloc[:, :-1]
+    # # y = target values, last column of the data frame
+    # y = data.iloc[:, -1]
+    # # filter out the applicants that got admitted
+    # admitted = data.loc[y == 1]
+    # # filter out the applicants that din't get admission
+    # not_admitted = data.loc[y == 0]
+    # # data setup. Add column of ones to X
+    # X = np.c_[np.ones((X.shape[0], 1)), X]
+    # y = y[:, np.newaxis]
+    # X_train, X_test, y_train, y_test = train_test_split(X,y,train_size=0.8,test_size=0.2)
 
+    # binary = LogisticRegression(X_train, y_train, X_test, y_test, 'SIGMOID', eta = 0.001, lambd = 0.001, epochs = 10000, batchs = 20)
+    # binary.train()
+    # accuracy, prediction = binary.predict_sigmoid()
+    # results = np.c_[prediction, y_test]
+    # print(accuracy)
+    # print(results)
 
+    ##################################
+
+    # X = feature values, all the columns except the last column
+    X = data.iloc[:, :-1]
+    # y = target values, last column of the data frame
+    y = data.iloc[:, -1]
+    # filter out the applicants that got admitted
+    admitted = data.loc[y == 1]
+    # filter out the applicants that din't get admission
+    not_admitted = data.loc[y == 0]
+
+    # data setup. DO NOT add 1's since we are using softmax
+    X = np.array(X)
+    y = to_categorical_numpy(y)
+
+    # TRAINING AND TEST DATA
+    X_train, X_test, y_train, y_test = train_test_split(X,y,train_size=0.8,test_size=0.2)
+
+    # SCALE DATA
+    scaler = StandardScaler()
+    scaler.fit(X_train)
+    X_train = scaler.transform(X_train)
+    x_test = scaler.transform(X_test)
+
+    eta_vec = np.logspace(-5, 1, 7)
+    lam_vec = np.logspace(-5, 1, 7)
+    test_accuracy = np.zeros((len(eta_vec), len(lam_vec)))
+
+    for i, eta in enumerate(eta_vec):
+        for j, lam in enumerate(lam_vec):
+            binary = LogisticRegression(X_train, y_train, X_test, y_test, 'SOFTMAX', eta = eta,
+                                        lambd = lam, epochs = 100, batchs = 20)
+            binary.train()
+            binary.predict()
+            binary.score_one_hot()
+            accuracy = accuracy_metric(binary._one_hot_score, y_test)
+            test_accuracy[i][j] = accuracy
+
+    import seaborn as sns
+    sns.set()
+    fig, ax = plt.subplots(figsize = (10, 10))
+    sns.heatmap(test_accuracy, annot=True, ax=ax, cmap="viridis")
+    ax.set_title("Test Accuracy")
+    ax.set_ylabel("$\eta$")
+    ax.set_xlabel("$\lambda$")
+    plt.show()
+
+    # np.set_printoptions(precision=4)
+    # print('BEFORE SOFTMAX= \n', binary._predict)
+    # print('prediction accuracy= ', accuracy)
+    # print('predicted catagories= \n', binary._one_hot_score)
+    # print('true catgeories= \n', y_test)
+
+    ################################################ BINARY ###############################################################
 
 
 
@@ -242,12 +240,16 @@ plt.show()
 
 
 
-# if __name__ == "__main__":
-#
-#
-#
-#     # plots
-#     plt.scatter(admitted.iloc[:, 0], admitted.iloc[:, 1], s=10, label='Admitted')
-#     plt.scatter(not_admitted.iloc[:, 0], not_admitted.iloc[:, 1], s=10, label='Not Admitted')
-#     plt.legend()
-#     plt.show()
+
+
+
+
+    # if __name__ == "__main__":
+    #
+    #
+    #
+    #     # plots
+    #     plt.scatter(admitted.iloc[:, 0], admitted.iloc[:, 1], s=10, label='Admitted')
+    #     plt.scatter(not_admitted.iloc[:, 0], not_admitted.iloc[:, 1], s=10, label='Not Admitted')
+    #     plt.legend()
+    #     plt.show()

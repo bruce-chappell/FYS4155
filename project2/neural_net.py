@@ -6,8 +6,8 @@ from random import random, seed
 from activation_functions import Activation
 ################## NEURAL NET IMPORTS ##########################################
 
-np.set_printoptions(precision = 5)
-np.set_printoptions(linewidth = 400)
+# np.set_printoptions(precision = 5)
+# np.set_printoptions(linewidth = 400)
 
 
 class Neural_Network:
@@ -29,6 +29,7 @@ class Neural_Network:
     hyper_parameters: learning rate and regularization parameter for SGD
 
     '''
+
     def __init__(
             self,
             net_type,
@@ -49,6 +50,7 @@ class Neural_Network:
             raise ValueError("Need to specify number of neurons for each layer exactly, excluding output layer")
         if (len(act_func) != hidden_layers +1):
             raise ValueError("Need an activation function for each layer and an output activation function")
+        np.random.seed(2019)
 
         self._type = net_type
 
@@ -82,21 +84,24 @@ class Neural_Network:
             size_list = [self._X_full.shape[1]] + self._hidden_neurons + [self._categories]
         elif self._condition == 'brute force':
             size_list = [self._X.shape[1]] + self._hidden_neurons + [self._categories]
+            print(self._X.shape[1], self._categories)
         # size list = [f,n_0,n_1,n_2,..., n_l-1, c]
         # makes w_0 = [f,n_0], w_1 = [n_0,n_1], ... w_l = [n_l-1,c] where l is output layer
-        self._bias = [0.01*np.random.randn(s) for s in size_list[1:]]
-        self._weights = [0.01*np.random.randn(x, y) for x, y in zip(size_list[:-1],size_list[1:])]
+        self._bias = [0.01*np.zeros(s) for s in size_list[1:]]
+        self._weights = [np.random.randn(x, y) for x, y in zip(size_list[:-1],size_list[1:])]
+        # print('weights total ', len(self._weights))
+        # print('w0 \n', self._weights[0].shape)
+        # print('w1 \n', self._weights[1].shape)
+
 
 
     def feed_forward_train(self, X):
         a = np.zeros(self._hidden_layers + 2, dtype = np.ndarray)
         z = np.zeros(self._hidden_layers + 2, dtype = np.ndarray)
         a[0] = X
-        print('start', a[0].shape)
         z[0] = 0
         for i in range(self._hidden_layers +1):
             z[i+1] = a[i] @ self._weights[i] + self._bias[i]
-            print('z', z[i+1].shape)
             a[i+1] = self._act_functions[i](z[i+1])
         return z, a
 
@@ -119,35 +124,41 @@ class Neural_Network:
         # output layer gradients
         grad_b[-1] = np.sum(delta[-1], axis = 0)
         grad_w[-1] = a[-2].T @ delta[-1]
+        # print('\n last gradient \n', grad_w[-1])
 
         # hidden layer gradients
         for l in reversed(range(0, self._hidden_layers)):
             delta[l] = (delta[l+1] @ self._weights[l+1].T) * self._act_derivatives[l](z[l+1])
             grad_b[l] = np.sum(delta[l], axis=0)
             grad_w[l] = a[l].T @ delta[l]
+            # print('\n mid gradient \n', grad_w[l])
 
         # update weights and biases
         for i in reversed(range(0, self._hidden_layers +1)):
+            # print('\n update grads \n', grad_w[i], i)
             grad_w[i] += self._lambd * self._weights[i]
-            self._weights[i] -= self._eta * grad_w[i]
-            self._bias[i] -= self._eta * grad_b[i]
+            self._weights[i] = self._weights[i] - self._eta * grad_w[i]
+            # print('\n weights \n', self._weights[i], i)
+            self._bias[i] = self._bias[i] - self._eta * grad_b[i]
+            # print(self._bias[i], i)
+
 
     def train(self, X, y):
         self.initialize()
-        batches = self._data_len // self._batch_size
         if (self._condition == 'brute force'):
-            X = self._X_full
-            y = self._y_full
+            # X = self._X_full
+            # y = self._y_full
             for iter in range(self._n):
-                self._eta = self._eta / self._data_len
+                # self._eta = self._eta / self._data_len
                 self.back_propogate(X, y)
         elif (self._condition == 'SGD'):
+            batches = self._data_len // self._batch_size
             data_indices = np.arange(self._data_len)
+            self._eta = self._eta / self._batch_size
             for i in range(self._epochs):
                 batch_idx = np.array_split(np.random.permutation(self._data_len), batches)
                 for j in range(batches):
                     random_batch = np.random.randint(batches)
-                    self._eta = self._eta / self._batch_size
                     X = self._X_full[batch_idx[random_batch]]
                     y = self._y_full[batch_idx[random_batch]]
                     self.back_propogate(X, y)
@@ -164,6 +175,7 @@ class Neural_Network:
         for i in range(self._hidden_layers +1):
             z[i+1] = a[i] @ self._weights[i] + self._bias[i]
             a[i+1] = self._act_functions[i](z[i+1])
+            print(a[i+1].shape)
         probabilities = a[-1]
         idx = np.argmax(probabilities, axis = 1)
         prediction = np.zeros_like(probabilities)
@@ -182,7 +194,7 @@ class Neural_Network:
         for i in range(self._hidden_layers +1):
             z[i+1] = a[i] @ self._weights[i] + self._bias[i]
             a[i+1] = self._act_functions[i](z[i+1])
-        return z[-1], a[-1]
+        return z, a
 
 def accuracy(a,b):
     return accuracy_score(a,b)
@@ -192,54 +204,65 @@ def score_binary(a):
     a[np.where(a != 1)] = 0
     return a
 
+if __name__ == '__main__':
 
-########################## MNSIT DATA ################################################
-from sklearn import datasets
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.preprocessing import StandardScaler
-import pandas as pd
+    ########################## MNSIT DATA ################################################
+    from sklearn import datasets
+    from sklearn.preprocessing import OneHotEncoder
+    from sklearn.preprocessing import StandardScaler
+    import pandas as pd
 
-#import MNSIT DATA
-digits = datasets.load_digits()
-inputs = digits.images
-labels = digits.target
-labels = labels.reshape(len(labels),1)
-n_inputs = len(inputs)
-inputs = inputs.reshape(n_inputs, -1) #reshape len, 64 from len,8,8
-enc = OneHotEncoder(sparse = 'False', categories = 'auto')
-labels = enc.fit_transform(labels).toarray()
+    #import MNSIT DATA
+    digits = datasets.load_digits()
+    inputs = digits.images
+    labels = digits.target
+    labels = labels.reshape(len(labels),1)
+    n_inputs = len(inputs)
+    inputs = inputs.reshape(n_inputs, -1) #reshape len, 64 from len,8,8
+    enc = OneHotEncoder(sparse = 'False', categories = 'auto')
+    labels = enc.fit_transform(labels).toarray()
+    # print(inputs.shape)
+    ################################ BINARY TEST SET ################################
+    def load_data(path, header):
+        marks_df = pd.read_csv(path, header=header)
+        return marks_df
+    # load the data from the file
+    data = load_data("/Users/douglas/Fall_2019/filemovement/Machine-Learning/LogisticRegression/data/marks.txt", None)
+    X = data.iloc[:, :-1]
+    y = data.iloc[:, -1]
+    admitted = data.loc[y == 1]
+    not_admitted = data.loc[y == 0]
+    # data setup. DO NOT add 1's since we are using softmax
+    X = np.array(X)
+    y = np.array(y)
+    # y = y.reshape(len(y),1)
+    # y = enc.fit_transform(y).toarray()
+    y = y[:, np.newaxis]
 
-################################ BINARY TEST SET ################################
-def load_data(path, header):
-    marks_df = pd.read_csv(path, header=header)
-    return marks_df
-# load the data from the file
-data = load_data("/Users/douglas/Fall_2019/filemovement/Machine-Learning/LogisticRegression/data/marks.txt", None)
-X = data.iloc[:, :-1]
-y = data.iloc[:, -1]
-admitted = data.loc[y == 1]
-not_admitted = data.loc[y == 0]
-# data setup. DO NOT add 1's since we are using softmax
-X = np.array(X)
-y = np.array(y)
-y = y.reshape(len(y),1)
-y = enc.fit_transform(y).toarray()
-
-scaler = StandardScaler()
-X_train, X_test, y_train, y_test = train_test_split(X,y,train_size=0.8,test_size=0.2)
-scaler.fit(X_train)
-X_train = scaler.transform(X_train)
-X_test = scaler.transform(X_test)
+    scaler = StandardScaler()
+    X_train, X_test, y_train, y_test = train_test_split(inputs,labels,train_size=0.8,test_size=0.2)
+    # scaler.fit(X_train)
+    # X_train = scaler.transform(X_train)
+    # X_train = np.c_[np.ones((X_train.shape[0], 1)), X_train]
+    #
+    # X_test = scaler.transform(X_test)
+    # X_test = np.c_[np.ones((X_test.shape[0],1)), X_test]
+    print('X =', X_train.shape)
+    print('y= ', y_train.shape)
 
 
-test = Neural_Network('SOFTMAX CROSS-ENTROPY', X_train, y_train,
-                          ['SIGMOID',  'SOFTMAX'], epochs = 1000, batchsize = 10, iterations = None, hidden_layers =1, hidden_neurons = [3], eta =0.00001, lambd = 0.001)
-test.train(X_train, y_train)
-prob, pred = test.feed_out_softmax(X_train)
-print(prob[:10])
-print(pred)
+    test = Neural_Network('SOFTMAX CROSS-ENTROPY', X_train, y_train,
+                              ['SIGMOID', 'SIGMOID', 'SOFTMAX'], epochs = None, batchsize = None, iterations = 100, hidden_layers =2, hidden_neurons = [50,50], eta =.001, lambd = 0.001)
+    test.train(X_train, y_train)
+    prob, pred = test.feed_out_softmax(X_test)
+    # print(prob.shape)
+    # print(prob[:10])
+    # score = score_binary(prob[-1])
+    # print('z vals \n', zprob[0],'\n', zprob[1],'\n', zprob[2])
+    # print('prob vals \n', prob[0],'\n', prob[1],'\n', prob[2])
+    # print(score)
 
-print(accuracy(pred,y_train))
+    print(accuracy(pred,y_test))
 
 
 

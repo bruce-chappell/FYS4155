@@ -27,14 +27,14 @@ class Activation:
         return np.maximum(x, 0)
 
     def d_sigmoid(self, x):
-        return (1 - x) * x
+        return self.sigmoid(x)*(1.0 - self.sigmoid(x))
 
     def d_softmax(self, x):
         dx_ds = np.diag(x) - np.dot(x, x.T)
         return dx_ds.sum(axis=0).reshape(-1, 1)
 
     def d_tanh(self, x):
-        return 1 - x*x
+        return 1 - self.tanh(x)**2
 
     def d_relu(self, x):
         return 1 * (x > 0)
