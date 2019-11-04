@@ -54,11 +54,18 @@ class Activation:
         }
         # if activation not in funcs:
         # raise TypeError("\nActivation function must be either:\n'SIGMOID'\n'SOFTMAX'\n'TANH'\n'RELU'")
+
+        entries = len(activation)
         self.func = {}
         self.deriv = {}
-        for i in range(len(activation)):
-            self.func[i] = funcs[activation[i]]
-            self.deriv[i] = derivs[activation[i]]
+        if (entries == 1):
+            self.func = funcs[activation[0]]
+            self.deriv = derivs[activation[0]]
+
+        elif (entries > 1):
+            for i in range(len(activation)):
+                self.func[i] = funcs[activation[i]]
+                self.deriv[i] = derivs[activation[i]]
         return
 
 

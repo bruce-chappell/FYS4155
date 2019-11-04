@@ -43,6 +43,8 @@ class LogisticRegression:
         self._lam = lambd
         self._eta = eta
         self.activation = Activation(act_func)
+        # self._act_functions = [a for a in self.activation.func.values()]
+
 
         if ((batchs != None) and (epochs != None)):
             self._batchs = batchs
@@ -95,6 +97,10 @@ class LogisticRegression:
     def score_binary(self):
         self._predict[np.where(self._predict > .5)] = 1
         self._predict[np.where(self._predict != 1)] = 0
+        return self._predict
+
+    def accuracy_metric(self, a, b):
+        return accuracy_score(a,b)
 
 def to_categorical_numpy(integer_vector):
     n_inputs = len(integer_vector)
@@ -103,8 +109,7 @@ def to_categorical_numpy(integer_vector):
     onehot_vector[range(n_inputs), integer_vector] = 1
     return onehot_vector
 
-def accuracy_metric(a,b):
-    return accuracy_score(a,b)
+
 
 
 if __name__ == '__main__':
@@ -147,28 +152,6 @@ if __name__ == '__main__':
 
 
     ##### THIS GIVES GOOD RESULTS SIGMOID#####
-    # # X = feature values, all the columns except the last column
-    # X = data.iloc[:, :-1]
-    # # y = target values, last column of the data frame
-    # y = data.iloc[:, -1]
-    # # filter out the applicants that got admitted
-    # admitted = data.loc[y == 1]
-    # # filter out the applicants that din't get admission
-    # not_admitted = data.loc[y == 0]
-    # # data setup. Add column of ones to X
-    # X = np.c_[np.ones((X.shape[0], 1)), X]
-    # y = y[:, np.newaxis]
-    # X_train, X_test, y_train, y_test = train_test_split(X,y,train_size=0.8,test_size=0.2)
-
-    # binary = LogisticRegression(X_train, y_train, X_test, y_test, 'SIGMOID', eta = 0.001, lambd = 0.001, epochs = 10000, batchs = 20)
-    # binary.train()
-    # accuracy, prediction = binary.predict_sigmoid()
-    # results = np.c_[prediction, y_test]
-    # print(accuracy)
-    # print(results)
-
-    ##################################
-
     # X = feature values, all the columns except the last column
     X = data.iloc[:, :-1]
     # y = target values, last column of the data frame
@@ -177,43 +160,70 @@ if __name__ == '__main__':
     admitted = data.loc[y == 1]
     # filter out the applicants that din't get admission
     not_admitted = data.loc[y == 0]
-
-    # data setup. DO NOT add 1's since we are using softmax
-    X = np.array(X)
-    y = to_categorical_numpy(y)
-
-    # TRAINING AND TEST DATA
+    # data setup. Add column of ones to X
+    X = np.c_[np.ones((X.shape[0], 1)), X]
+    y = y[:, np.newaxis]
     X_train, X_test, y_train, y_test = train_test_split(X,y,train_size=0.8,test_size=0.2)
 
-    # SCALE DATA
-    scaler = StandardScaler()
-    scaler.fit(X_train)
-    X_train = scaler.transform(X_train)
-    x_test = scaler.transform(X_test)
+    binary = LogisticRegression(X_train, y_train, X_test, y_test, ['SIGMOID'], eta = 0.001, lambd = 0.001, epochs = 10, batchs = 20)
+    binary.train()
+    binary.predict()
+    score = binary.score_binary()
 
-    eta_vec = np.logspace(-5, 1, 7)
-    lam_vec = np.logspace(-5, 1, 7)
-    test_accuracy = np.zeros((len(eta_vec), len(lam_vec)))
+    results = np.c_[score, y_test]
+    print(results)
+    print(accuracy_metric(score,y_test))
+    import sys
+    print(sys.version)
 
-    for i, eta in enumerate(eta_vec):
-        for j, lam in enumerate(lam_vec):
-            binary = LogisticRegression(X_train, y_train, X_test, y_test, 'SOFTMAX', eta = eta,
-                                        lambd = lam, epochs = 100, batchs = 20)
-            binary.train()
-            binary.predict()
-            binary.score_one_hot()
-            accuracy = accuracy_metric(binary._one_hot_score, y_test)
-            test_accuracy[i][j] = accuracy
 
-    import seaborn as sns
-    sns.set()
-    fig, ax = plt.subplots(figsize = (10, 10))
-    sns.heatmap(test_accuracy, annot=True, ax=ax, cmap="viridis")
-    ax.set_title("Test Accuracy")
-    ax.set_ylabel("$\eta$")
-    ax.set_xlabel("$\lambda$")
-    plt.show()
+    ##################################
 
+    # # X = feature values, all the columns except the last column
+    # X = data.iloc[:, :-1]
+    # # y = target values, last column of the data frame
+    # y = data.iloc[:, -1]
+    # # filter out the applicants that got admitted
+    # admitted = data.loc[y == 1]
+    # # filter out the applicants that din't get admission
+    # not_admitted = data.loc[y == 0]
+    #
+    # # data setup. DO NOT add 1's since we are using softmax
+    # X = np.array(X)
+    # y = to_categorical_numpy(y)
+    #
+    # # TRAINING AND TEST DATA
+    # X_train, X_test, y_train, y_test = train_test_split(X,y,train_size=0.8,test_size=0.2)
+    #
+    # # SCALE DATA
+    # scaler = StandardScaler()
+    # scaler.fit(X_train)
+    # X_train = scaler.transform(X_train)
+    # x_test = scaler.transform(X_test)
+    #
+    # eta_vec = np.logspace(-5, 1, 7)
+    # lam_vec = np.logspace(-5, 1, 7)
+    # test_accuracy = np.zeros((len(eta_vec), len(lam_vec)))
+    #
+    # for i, eta in enumerate(eta_vec):
+    #     for j, lam in enumerate(lam_vec):
+    #         binary = LogisticRegression(X_train, y_train, X_test, y_test, 'SOFTMAX', eta = eta,
+    #                                     lambd = lam, epochs = 100, batchs = 20)
+    #         binary.train()
+    #         binary.predict()
+    #         binary.score_one_hot()
+    #         accuracy = accuracy_metric(binary._one_hot_score, y_test)
+    #         test_accuracy[i][j] = accuracy
+    #
+    # import seaborn as sns
+    # sns.set()
+    # fig, ax = plt.subplots(figsize = (10, 10))
+    # sns.heatmap(test_accuracy, annot=True, ax=ax, cmap="viridis")
+    # ax.set_title("Test Accuracy")
+    # ax.set_ylabel("$\eta$")
+    # ax.set_xlabel("$\lambda$")
+    # plt.show()
+    #
     # np.set_printoptions(precision=4)
     # print('BEFORE SOFTMAX= \n', binary._predict)
     # print('prediction accuracy= ', accuracy)
