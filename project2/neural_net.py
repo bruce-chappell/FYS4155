@@ -40,8 +40,8 @@ class Neural_Network:
             eta = 0.1, lambd = 0.001, #SGD hyperparameters
         ):
 
-        if net_type not in ['SOFTMAX CROSS-ENTROPY', 'REGRESSION']:
-            raise TypeError("net_type must be either 'SOFTMAX CROSS-ENTROPY', or 'REGRESSION'")
+        if net_type not in ['SOFTMAX CROSS-ENTROPY', 'REGRESSOR']:
+            raise TypeError("net_type must be either 'SOFTMAX CROSS-ENTROPY', or 'REGRESSOR'")
         self._type = net_type
 
         if (hidden_layers < 1):
@@ -84,7 +84,6 @@ class Neural_Network:
             size_list = [self._X_full.shape[1]] + self._hidden_neurons + [self._categories]
         elif self._condition == 'brute force':
             size_list = [self._X.shape[1]] + self._hidden_neurons + [self._categories]
-            print(self._X.shape[1], self._categories)
         # size list = [f,n_0,n_1,n_2,..., n_l-1, c]
         # makes w_0 = [f,n_0], w_1 = [n_0,n_1], ... w_l = [n_l-1,c] where l is output layer
         self._bias = [0.01*np.zeros(s) for s in size_list[1:]]
@@ -117,7 +116,7 @@ class Neural_Network:
         if (self._type == 'SOFTMAX CROSS-ENTROPY'):
             delta[-1] = a[-1] - y
 
-        elif (self._type == 'REGRESSION'):
+        elif (self._type == 'REGRESSOR'):
             deriv = self._act_derivatives[-1](z[-1])
             delta[-1] = (a[-1] - y) * deriv
 
@@ -175,7 +174,6 @@ class Neural_Network:
         for i in range(self._hidden_layers +1):
             z[i+1] = a[i] @ self._weights[i] + self._bias[i]
             a[i+1] = self._act_functions[i](z[i+1])
-            print(a[i+1].shape)
         probabilities = a[-1]
         idx = np.argmax(probabilities, axis = 1)
         prediction = np.zeros_like(probabilities)
@@ -184,7 +182,7 @@ class Neural_Network:
         return probabilities, prediction
 
 
-    def feed_out_regression(self, X):
+    def feed_out_regressor(self, X):
         # just need last a matrix which is probabilities from output layer
         a = np.zeros(self._hidden_layers + 2, dtype = np.ndarray)
         z = np.zeros(self._hidden_layers + 2, dtype = np.ndarray)
@@ -196,13 +194,13 @@ class Neural_Network:
             a[i+1] = self._act_functions[i](z[i+1])
         return z, a
 
-def accuracy(a,b):
-    return accuracy_score(a,b)
+    def accuracy(self, a, b):
+        return accuracy_score(a,b)
 
-def score_binary(a):
-    a[np.where(a > .5)] = 1
-    a[np.where(a != 1)] = 0
-    return a
+    def score_binary(self, a):
+        a[np.where(a > .5)] = 1
+        a[np.where(a != 1)] = 0
+        return a
 
 if __name__ == '__main__':
 
