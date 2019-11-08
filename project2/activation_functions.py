@@ -26,6 +26,9 @@ class Activation:
     def relu(self, x):
         return np.maximum(x, 0)
 
+    def linear(self, x):
+        return x
+
     def d_sigmoid(self, x):
         return self.sigmoid(x)*(1.0 - self.sigmoid(x))
 
@@ -39,18 +42,23 @@ class Activation:
     def d_relu(self, x):
         return 1 * (x > 0)
 
+    def d_linear(self, x):
+        return np.ones_like(x)
+
     def __init__(self, activation):
         funcs = {
             'SIGMOID' : self.sigmoid,
             'SOFTMAX' : self.softmax,
             'TANH'    : self.tanh,
             'RELU'    : self.relu,
+            'LINEAR'  : self.linear,
         }
         derivs = {
             'SIGMOID' : self.d_sigmoid,
             'SOFTMAX' : self.d_softmax,
             'TANH'    : self.d_tanh,
             'RELU'    : self.d_relu,
+            'LINEAR'  : self.d_linear,
         }
         # if activation not in funcs:
         # raise TypeError("\nActivation function must be either:\n'SIGMOID'\n'SOFTMAX'\n'TANH'\n'RELU'")

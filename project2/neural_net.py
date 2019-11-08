@@ -202,6 +202,12 @@ class Neural_Network:
         a[np.where(a != 1)] = 0
         return a
 
+    def mse(self, z, zhat):
+        return np.mean((z - zhat)**2)
+
+    def R2score(self, z, zhat):
+        return 1 - np.sum((z - zhat) ** 2) / np.sum((z - np.mean(zhat)) ** 2)
+
 if __name__ == '__main__':
 
     ########################## MNSIT DATA ################################################
