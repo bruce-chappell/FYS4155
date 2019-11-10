@@ -1,0 +1,608 @@
+\documentclass{emulateapj}
+%\documentclass[12pt,preprint]{aastex}
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{epsfig,floatflt}
+\usepackage{hyperref}
+\usepackage[toc, page]{appendix}
+\usepackage{verbatim, amsmath, amsfonts, amssymb, amsthm}
+\usepackage[utf8]{inputenc}
+\usepackage{textcomp}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{color}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage[T1]{fontenc}
+\usepackage{url}
+\usepackage[export]{adjustbox}
+\usepackage{calc}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{accents}
+\newcommand{\dbtilde}[1]{\accentset{\approx}{#1}}
+\newcommand{\vardbtilde}[1]{\tilde{\raisebox{0pt}[0.85\height]{$\tilde{#1}$}}}
+\usepackage{lipsum, babel}
+\usepackage{lipsum}
+\usepackage[para]{footmisc}
+\usepackage{booktabs}
+\usepackage[normalem]{ulem}
+\useunder{\uline}{\ul}{}
+
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+
+\lstset{ %
+	backgroundcolor=\color{white}\ttfamily\tiny,   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}; should come as last argument
+	basicstyle=\tiny,        % the size of the fonts that are used for the code \footnotesize,
+	breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+	columns=fullflexible,    %no spaces between columns
+	keepspaces=true,
+	breaklines=true,                 % sets automatic line breaking
+	breakatwhitespace=true,
+	captionpos=b,                    % sets the caption-position to bottom
+	commentstyle=\color{mygreen},    % comment style
+	deletekeywords={...},            % if you want to delete keywords from the given language
+	escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+	extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+	frame=single,	                   % adds a frame around the code
+	keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+	keywordstyle=\color{blue},       % keyword style
+	language=Python,                 % the language of the code
+	morekeywords={*,...},           % if you want to add more keywords to the set
+	%numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+	%numbersep=5pt,                   % how far the line-numbers are from the code
+	%numberstyle=\tiny\color{mygray}, % the style that is used for the line-numbers
+	rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+	showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+	showstringspaces=false,          % underline spaces within strings only
+	showtabs=false,                  % show tabs within strings adding particular underscores
+	stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
+	stringstyle=\color{mymauve},     % string literal style
+	tabsize=1,	                   % sets default tabsize to 2 spaces
+	%title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+}
+\begin{document}
+
+\title{Project 2 on Machine Learning:
+\\Classification and Regression,\\ from linear and logistic regression to neural networks}
+
+\author{Bruce Chappell \\ email \href{b.a.chappell@fys.uio.no}{b.a.chappell@fys.uio.no} \\
+\and Francesco Anello \\ email \href{f.anello1@campus.unimib.it}{f.anello1@campus.unimib.it/francean@student.matnat.uio.no} }
+
+\begin{abstract}
+In this project we study neural networks implemented in two different problems types: first, a classification problem is analysed using a credit card default payment dataset; then a linear regression problem is studied with data generated from the Franke function. Our aim is to compare our neural network algorithm against logistic regression and SciKit-Learn for classification, and against Ordinary Least Squares and SkiKit-Learn for linear regression.
+The results obtained by using our own code match SciKit-Learn for classification, and best SciKit-Learn for regression. A $10 \times 10$ neural network turns out to be the best predictive model for classifying the credit card data and a $100\times50\times20$ network just barely outperforms $OLS$ for the Franke Function data. Due to computational complexity, $OLS$ is taken to be the preferred regression method.
+
+\end{abstract}
+
+\section{Introduction}
+\label{sec:introduction}
+In recent years, the popularity of neural networks has exploded. Many problems within business, science, and engineering require predicting the class or type of an output based on given inputs. Neural networks have shown significant strengths when solving these problems which has contributed to their popularity increase. They have also been shown to be effective when solving classic linear regression problems.
+
+In this first part of this paper, we will consider a classification problem applied to the credit card data set from UCI. This data set documents 23 variables related to credit card usage and whether a customer defaulted on their next bill payment. The objective is to develop a neural network to predict whether or not a customer defaults on their next payment based on the 23 input features. Our network will be constructed using gradient descent for backpropogation for learning between the layers. To ensure the neural network is working efficiently, we will compare its predictions against those of the more basic Logistic Regression. Due to the high number of predictors, Principal Component Analysis is used too.
+
+In the second part we will explore using neural networks to make linear regression fits, specifically on the Franke function. Fitting this function using traditional regression methods was studied in detail in Project 1 and we will benchmark our new results against those from Project 1.
+
+In the following section we presents a theoretical and mathematical overview of logistic regression, gradient descent methods and neural networks. Then a description  containing a short summary of our specific implementations is shown. At the end, the analysis of results are displayed with final conclusions.
+
+
+\section{Theory and Methods}
+\label{sec:theory_methods}
+This section describes the different methods studied and applied to obtain our final results.
+In particular, Logistic regression, gradient descent, Neural networks and Principal Component Analysis are explained.
+For the linear regression section, reference is made to the previous project.
+\subsection{Logistic Regression} \label{logistic}
+Logistic Regression is a statistical method used to study and quantify the relations between one or more independent variables $X_1, ..., X_p$ and a dichotomous dependent variable $Y$.
+
+This method is better considered as a form of classification, not of regression.
+Let $Y$ be a binary response, where:
+\begin{equation}
+\begin{cases}
+  Y=1   \textrm{ represents "success"     with } Pr(Y=1)=\pi \\
+  Y=0  \textrm{ represents "failure"     with } Pr(Y=0)=1-\pi
+\end{cases}
+\end{equation}
+Y is a Bernoulli random variable with parameter $p=\pi$ with probability function:
+\begin{equation}
+    f(y;\pi)=\pi^y(1-\pi)^{1-y}; \; y=0,1;\; 0\leq\pi\leq1
+\end{equation}
+Hence, its expected value $E(Y)$ is:
+\begin{equation}
+E(Y)=\sum_{y=0}^{1}y f(y;\pi)=0\cdot f(0;\pi)+1\cdot f(1;\pi)=\pi
+\end{equation}
+Let $Y$ be a linear combination of the inputs variables $Y=\beta_0+\beta_1x_1+...+\beta_px_p+\varepsilon$.
+Thus:
+\begin{equation}
+  E(Y|x)=p(x)=\pi(x)=\beta_0+\beta_1x_1+...+\beta_px_p=\boldsymbol{X}\beta
+\end{equation}
+So, since by definition $0\leq \pi(x) \leq 1 $ $\forall x $, using a linear regression model would not be appropriate: it would give values in the set of real numbers ${\displaystyle \mathbb {R}}$.
+To guarantee that $\pi$ stays between 0 and 1, we require a positive monotone function that maps the ‘linear predictor’ into the unit interval.
+Commonly the logistic ( or sigmoid) function is adopted for this reason:
+\begin{equation}
+    \sigma(z)=\frac{1}{1+e^{-z}}=\frac{e^z}{1+e^z}
+\end{equation}
+So in this case,
+\begin{equation}
+    E(Y|x)=\pi(x)=\frac{e^{\boldsymbol{X}\hat{\beta}}}{1+e^{\boldsymbol{X}\hat{\beta}}}
+\end{equation}
+This function is not linear but we can make it linear considering its \textit{logit} transformation :
+\begin{equation}
+    logit(\pi(x))=ln(\frac{\pi(x)}{1-\pi(x)})=ln(\frac{Pr(Y_i=1)}{Pr(Y_i=0)})=\boldsymbol{X}\hat{\beta}
+\end{equation}
+Logistic regression can be consider as linear regression applied on the logit transform.
+The function $\frac{\pi(x)}{1-\pi(x)}$ is called odds ratio and represents how much the success is more plausible to the failure.
+It assumes real positive values, 0 included.\\
+So, we have that:
+\begin{equation}
+    Pr(y_i=1|x_i,\hat{\beta})=\sigma(x_i\hat{\beta})
+\end{equation}
+and
+\begin{equation}
+    Pr(y_i=0|x_i,\hat{\beta})=1-Pr(y_i=1|x_i,\hat{\beta})
+\end{equation}
+The prediction is set to 1 if $Pr(y_i=1|x_i,\hat{\beta})\geq 0.5$, otherwise to 0.
+In order to estimate the parameters of logistic regression, we use the Maximum likelihood function.
+Since the $n$ units are independent, the Maximum likelihood function is given by the product of $n$ probability functions:
+\begin{equation}
+L(\hat{\beta})& = \prod_{i=1}^n \left[p(y_i=1|x_i,\hat{\beta})\right]^{y_i}\left[1-p(y_i=1|x_i,\hat{\beta}))\right]^{1-y_i}\nonumber \\
+\end{equation}
+So, the log-likelihood function for logistic regression is:
+\begin{equation}
+\begin{split}
+\sum_{i=1}^n \left( y_i\log{p(y_i=1|x_i,\hat{\beta})} + (1-y_i)\log\left[1-p(y_i=1|x_i,\hat{\beta}))\right]\right)
+\end{split}
+\end{equation}
+Now, we take the cost function, $\mathcal{C}(\hat{\beta})$, to be the negative log-likelihood. This is the equation that needs to be minimized to find optimal parameters $\hat{\beta}$ for the model. The derivatives with respect to $\hat{\beta}$ are as follows:
+\begin{equation}
+    \frac{\partial \mathcal{C}(\hat{\beta})}{\partial \hat{\beta}} = -\hat{X}^T\left(\hat{y}-\hat{p}\right)
+\end{equation}
+\begin{equation}
+    \frac{\partial^2 \mathcal{C}(\hat{\beta})}{\partial \hat{\beta}\partial \hat{\beta}^T} = \hat{X}^T\hat{W}\hat{X}=H
+\end{equation}
+H is positive definite, so the function considered is convex and has a unique global minimum. The optimal set of parameters to find it can be found using gradient descent. The performance of a logistic regression model can be evaluated by calculating the accuracy score:
+\begin{equation}
+    \text{Accuracy} = \frac{\sum_{i=1}^n I(t_i = y_i)}{n}
+\end{equation}
+\iffalse
+The equation of the model is not defined directly on the explanatory variables $X_j$.
+\begin{equation}
+    g(\mu_i)=\boldsymbol{\beta}'\boldsymbol{x}_i=\beta_1x_{i1}+\beta_2x_{21}+...+\beta_px_{ip}
+\end{equation}
+
+
+
+
+
+Classification problems, however, are concerned with outcomes taking the form of discrete variables (i.e. categories).
+we introduce
+logistic regression which deals with binary, dichotomous
+outcomes (e.g. True or False, Success or Failure, etc.).
+
+The most common situation we encounter when we apply logistic regression is that of two possible outcomes, normally denoted as a binary outcome, true or false, positive or negative, success or failure etc.Regression Analysis is a data analysis method used to calculate the specific coefficients $\beta$ which determine the association between the outcome variable.
+\fi
+
+\subsection{Gradient descent}
+Gradient descent (also known as steepest descent) is one of the most preferred first-order optimization methods for finding minima of a given multivariate function which, in machine learning, is the cost function. The procedure iteratively performs updates on the parameters $\beta$ in the direction where the gradient of the cost function is large and negative. Parameters are initialized to some value $\boldsymbol{\beta}_0$ and iteratively updated according to the equation
+\begin{equation}
+    \mathbf{x}_{k+1} = \mathbf{x}_k - \gamma_k \nabla C(\mathbf{x}_k),
+\end{equation}
+where $\nabla C(\mathbf{x}_k)$ is the gradient or first derivative of the cost function $C(\mathbf{x}_k)$ at the $k$-th step and $\gamma_k$ is the learning rate which determines how big a step would be in the direction of the gradient at time iteration $k$. If $\gamma_k$ is of sufficient size, this method will converge to a local minimum of the cost function. However, if $\gamma_k$ is too small, the method will converge very slowly which comes at a large computational cost. On the contrary, if $\gamma_k$ is too large, the algorithm  may fail to converge.
+
+This method is very sensitive to choices of the learning rates and also of GD's initial conditions. Depending on where one initiates the algorithm, one can become stuck in a local minimum, missing the true global minimum of the cost function. The cost functions studied in Machine Learning often present many local minima, making it important to include stochasticity in our method.
+\subsubsection{Stochastic gradient descent with mini-batches}
+Stochasticity is introduced in the training process by approximating the gradient on a subset of the data, called a mini-batch.
+If there are $n$ data-points and the mini-batch size is $M$, there will be $B_k=n/M$ mini-batches where $k=1,...,n/M$. The idea is to perform gradient descent over random mini-batches of points and update the parameters accordingly.
+\begin{equation}
+    \nabla_{\beta}
+C(\mathbf{\beta}) = \sum_{i=1}^n \nabla_\beta c_i(\mathbf{x}_i,
+\mathbf{\beta}) \rightarrow \sum_{i \in B_k}^n \nabla_\beta
+c_i(\mathbf{x}_i, \mathbf{\beta})
+\end{equation}
+
+Thus a gradient descent step can be rewritten as:
+\begin{equation}
+ \beta_{j+1} = \beta_j - \gamma_j \sum_{i \in B_k}^n \nabla_\beta c_i(\mathbf{x}_i,
+\mathbf{\beta})
+\end{equation}
+A cycle over all $k=1,...,n/M$ mini-batches is commonly called an epoch.
+\subsection{Neural Networks}
+In Machine Learning, a neural network is a computational model composed by artificial "neurons", inspired by the simplification of a neural circuit in a brain. The neurons are organized into multiple layers, where the output of one layer is the input for the next. In particular, the first layer is called the input layer, the middle layers are
+“hidden layers”, and the final layer is
+the output layer. Each "neuron" $i$ takes a vector of $d$ input features $x=(x_1,x_2,...,x_d)$ and produces an output $a_i(x)$ which depends on the type of the non-linear function considered. However, $a^{(i)}$ can be decomposed into a linear transformation $z^{(i)}$  that weighs the importance of various inputs, and a non-linear activation function $f(z^{(i)})$.
+\\The linear transformation can be described in the following way:
+\begin{equation}
+\mathbf{z}^{(i)}=\mathbf{w}^{(i)}\mathbf{a}^{(i-1)}+\mathbf{b}^{(i)}
+\end{equation}
+where $\mathbf{w}^{(i)}$ is the vector containing the assigned weights to each neuron and $b^{(i)}$ is a vector of biases associated with each neuron. This feed forward process can be generalized by the following steps:
+
+\begin{equation}
+    \mathbf{z}^{(0)} = \mathbf{w}^{(0)}\mathbf{X}_{inputs}+\mathbf{b}^{(0)}
+\end{equation}
+\begin{equation}
+    \mathbf{a}^{(i)} = f^{(i)}(\mathbf{z}
+    ^{(i)})
+\end{equation}
+\begin{equation}
+    \mathbf{z}^{(i)} =
+    \mathbf{w}^{(i)}\mathbf{a}^{(i-1)}+\mathbf{b}^{(i)}
+\end{equation}
+\begin{equation}
+    \mathbf{z}^{(Last)} = \mathbf{w}^{(Last)}\mathbf{a}^{(Last-1)}+\mathbf{b}^{(Last)}
+\end{equation}
+\begin{equation}
+    \mathbf{a}^{(Last)} = f^{(Last)}(\mathbf{z}
+    ^{(Last)})
+\end{equation}
+$\mathbf{a}^{(Last)}$ is the output of the neural network. After a feed forward run, we want to backpropogate through the network updating the weights and biases in a way that minimizes the cost function. We do this by calculating how much each layer of weights and biases contributed to the overall error in the prediction. We start with the error in the last layer $L$ or the prediction layer.
+\begin{equation}
+    \delta_j^L = f'(z_j^L)\frac{\partial {\cal C}}{\partial (a_j^L)}
+\end{equation}
+where $f'(z_j^L)$ is the derivative of the activation function of the $j$-th neuron with respect to its input and $\frac{\partial {\cal C}}{\partial (a_j^L)}$ is the derivative of the cost function with respect to the output of the network. For regression problems, $\delta_j^L$ is simply:
+\begin{equation}
+    \delta_j^L = f'(z_j^L)(a_j^L - t_j)
+\end{equation}
+where $t_j$ is the target vector. For classification:
+\begin{equation}
+    \delta_j^L = (a_j^L - y_j)
+\end{equation}
+where $y_j$ is a vector of categorical data. \\We now find the errors in the previous layers using the following equation:
+\begin{equation}
+    \delta_j ^{l-1} = \sum_{k}\delta_k ^l w_{kj}^l f'(z_j ^{l-1})
+\end{equation}
+These calculated errors are used to update the corresponding weights and biases by the following gradient descent method:
+\begin{equation}
+    w_{jk}^l \leftarrow w_{jk}^l(1-\lambda) - \eta \delta_j ^l a_k^{l-1}
+\end{equation}
+\begin{equation}
+    b_j^l \leftarrow b_j^l - \eta \delta_j^l
+\end{equation}
+where $\eta$ is the learning rate and $\lambda$ is a regularization parameter.\\To prevent runaway values in the hidden layers, it is convenient to feed the $z$ weighted sums into some function that squishes the real number line into the range between 0 and 1. Two commonly used functions are the Sigmoid function and the Hyperbolic Tangent.
+
+Using a neural network is a flexible method since it creates good regression fits and can be used for multiclass classification problems. However, it presents also some disadvantages. For example, there are no standard and strict criteria with which to choose the number hidden layers and nodes. Optimizing a network for a data set often requires a bit of guessing and checking to arrive at a suitable structure.
+
+
+
+
+
+\subsection{Principal Component Analysis} \label{PCA}
+
+Given $p$ variables $X_1,...,X_j,...X_p$  , the aim of the PCA is to determine $k$ new variables not directly observable, called PC, such that $k<<p$ with the following properties:
+\begin{enumerate}
+ \item They are uncorrelated: $\rho(PC_s,PC_m)=0, \forall s \neq m $
+ \item They reproduce the larger possible amount of total variance remaining after the construction of the first $s-1$ Principal Components:\\
+ $Var(PC_s)\geq Var(PC_m)$  $\forall s < m $ and \\$Var(PC_s)\leq Var(PC_m)$  $\forall s >m$
+ \item Principal components are built in a non-increasing order with the respect to the amount of total variance that they reproduce:\\
+ $Var_{tot}=tr(\Sigma)=\sum_{j=1}^{p}Var(X_j)$
+ \item They have expected values equal to zero:
+ $E(PC_s)=0$  $\forall s=1,...,k \leq p$
+ \end{enumerate}
+To guarantee the latter, PCA assumes that the considered data is centered around the origin: hence, PC are built by using centred or standardized variables as their appropriate linear combination:
+\begin{equation}
+    PC_s=v_{s1}X_1+...+v_{sj}X_j+v_{sp}X_p \forall s=1,...,k\leq p
+\end{equation}
+
+Hence, Principal Components can be considered as intrinsic variables that approximately describe the data.
+From a geometrical point of view,
+PCA identifies the hyperplane that is located closest to the data, and therefore it projects the data onto it.
+It can be shown the following relation:
+\begin{equation}
+Var(PC_1)=v_{s1}^T\Sigma v_{s1}=\lambda_1
+\end{equation}
+with $\lambda_1=max_{s=1,...,p}(\lambda_s)$. $v_{1}$ is considered the normalized eigenvector associated with $\lambda_1$.
+Generally, in matrix notation we have that:
+\begin{eqation}
+{y}_s=\boldsymbol{X}{v}_s
+\end{eqation}
+where ${v}_s=[v_{s1},...,v_{sj},...,v_{sp]^T}$ is the normalized eigenvector (${v}_s^T{v}_s=1$) associated with the eigenvalue $\lambda_s=Var(PC_s)$ and it is orthogonal to all the other s-1 eigenvectors ${v}_m$ associated to the first $s-1$ Principal Components $PC_m$ with $m=1,...,s-1$.
+\pagebreak
+
+
+
+\section{Data exploration and implementation}
+\subsection{Taiwan Credit Card Dataset}
+This dataset contains 30000 instances on default payments (described by a binary variable which assumes value equal to 1 for "Yes" and 0 for "No") and  demographic factors, credit data, history of payment, and bill statements of credit card clients in Taiwan from April 2005 to September 2005.
+\\The data set comes from the UCI Machine Learning Repository Irvine, CA: University of California, School of Information and Computer Science.
+
+There are 24 variables, among which 9 are categorical. More details about the nature and the meaning of the variables are described in the Appendix (Table \ref{tab:my-table}).
+
+Before running the proper analysis, we do pre-processing on the considered dataset. First we check if there are missing data and if the values assumed by the categorical variables are in agreement with the documentation provided for the data. This is possible using the $value\textunderscore counts()$ function of pandas which calculates frequency distribution for categorical variables. There are no missing values but many anomalous values are detected as shown in the following table:
+\begin{table}[h!]
+\centering
+\caption{Undocumented values for categorical variables}
+\label{tab:my-table1}
+\begin{tabular}{lcc}
+\hline
+\multicolumn{1}{c}{\textbf{Variable}} & \textbf{Undocumented label} & \textbf{Observed values} \\ \hline
+EDUCATION & 0 & 14 \\
+MARRIAGE & 0 & 54 \\
+PAY\textunderscore1 & -2 & 2579 \\
+PAY\textunderscore1 & 0 & 14737 \\
+PAY\textunderscore2 & -2 & 3927 \\
+PAY\textunderscore2 & 0 & 15730 \\
+PAY\textunderscore3 & -2 & 4085 \\
+PAY\textunderscore3 & 0 & 15764 \\
+PAY\textunderscore4 & -2 & 4348 \\
+PAY\textunderscore4 & 0 & 16455 \\
+PAY\textunderscore5 & -2 & 4546 \\
+PAY\textunderscore5 & 0 & 16947 \\
+PAY\textunderscore6 & -2 & 4895 \\
+PAY\textunderscore6 & 0 & 16286 \\ \hline
+\end{tabular}
+\end{table}
+\\We have undocumented values for EDUCATION, MARRIAGE and all the repayment status variables PAY. We decide to delete the observations with undocumented values for EDUCATION and MARRIAGE. If we removed all the observations with unlabelled values for these features, we would have only 4030 observations left from the original 30000. Thus we change the value of PAY variables with -2 to 0 to consider them as irrelevant. After this first step of data cleaning, 29601 observations are left.
+
+Afterwards, we use pandas.DataFrame.describe function to get all the most important descriptive statistics (central tendency and dispersion) to start understanding the distribution of the variables and check if there are any anomalies or outliers. We observe very wide ranges of values in our continuous variables that could cause problems in our study. We created the function $find\textunderscore outliers$ to return the dataset without outliers to a given tolerance.
+Generally a value is considered as an outlier if it is bigger than $Q3+1.5\times IQR$ or less than $Q1-1.5\times IQR$ where Q1, Q3, IQR are respectively the first quartile, the third quartile and the interquantile range.
+\\Since only 14299 observation would remain using the standard 1.5, we choose to use 3 as our threshold.
+Using this alternative threshold, 21708 units are left.
+These units will represent the first data set we focus on. We now split the data set into test and training sets and standardize the continuous and PAY features by removing the mean and scaling to unit variance since the features present different measuring scales. This is advantageous from a computational point of view because large input values can saturate activation functions (sigmoid and tanh) and lead to a slowdown in the training.
+
+The correlation matrix (Figure \ref{Correlation_matrix} in Appendix) shows that while features associated with bill amount ('$BILL\textunderscore AMT$') present high correlations to each other, they do not contribute significantly to the target variable. As expected, the variables related to payment status are correlated to each other and show higher contribution to the outcome variable. They are not so high (between 0.23 and 0.35) but significantly more important than the correlations observed for all the other features. We observe negative correlations that in absolute value are smaller than 0.01 for all the $BILL\textunderscore AMT$ and $PAY \textunderscore ATM$ variables and correlation for "SEX", "AGE", "MARRIAGE","EDUCATION" are also negative. Hence, many of our variables do not appear to provide significant information for our purposes. We then work to reduce the dimensionality of the problem using Principal Component Analysis (PCA) which is described in \ref{PCA}. We observe the following scree plot for the standardized training data:\\
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.38]{scree.png}
+    \caption{This plot reports the percentage of reproduced variance by each principal component(in ordinate) with the respect to its order number (in abscissa). A common approach is to keep the PC before the "elbow" for analysis. In this case we observe that the "elbow" is located after the two first PC.}
+    \label{fig:scree_plot}
+\end{figure}
+We choose to keep the number of PC that explains $95\%$ of the variance. For our training data set this is the first 15 PC. We now have a data set comprised of 15 new variables instead of the original 23 variables. This will constitute our second dataset.
+
+We then perform a grid search over the hyperparameters $\eta$ and $\lambda$ to calculate the accuracy scores of the neural network and logistic regression methods when predicting payment defaults. We use $k$-fold cross-validation with $k=5$ to create train and validation sets from our training set. After finding ideal $\eta$ and $\lambda$ values we explore the relationship between batch size, epochs, and accuracy score. This is done for the original dataset and the PC dataset.
+
+
+\subsection{Franke's Function}
+We also use the neural network algorithm to study a linear regression case from our previous project, the Franke function.
+For comprehensive descriptions and further details regarding the latter, reference is made to the Section 3 of Project 1.\\
+For this regression analysis, a random $300\times300$ mesh grid in the domain $[0,1]$ is created and fed into the Franke Function producing a $300\times300$ mesh grid of $z$ values. We then add noise to the $z$ values of the form $z_i=f(x_i,y_i)+\epsilon$ where $\epsilon \sim N(0,\sigma=0.05)$.\\
+The same hyperparamter analysis performed on the credit card data is performed on the Franke Function but $MSE$ and $R^2$ are calculated for each set of parameters.
+These two error metrics are illustrated in Section 2 of Project 1.
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.4]{ff1.png}
+    \caption{Franke's function: particular function used in interpolation problems. The function is evaluated on the square $x_i \in [0, 1]$ , $\forall i=1,2$.}
+    \label{fig:my_label}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.4]{ff2.png}
+    \caption{Franke's function with added noise.}
+    \label{fig:my_label}
+\end{figure}
+
+
+\section{Results}
+In this section all the results are obtained using our own original codes for logistic regression and neural network classification and regression.\\ The results are presented in sections corresponding to the solving method used to obtain them and the data set.
+\subsection{Taiwan Credit Card Dataset}
+\subsubsection{Logistic Regression}
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.35]{C1.png}
+    \caption{Accuracy score for different regularization $\lambda$ and learning rate $\eta$ for logistic regression using Stochiastic Gradient Descent. The Sigmoid function was used as the activation function and the problem was solved using 20 epochs and a batch size of 100.}
+    \label{fig4}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.32]{C2.png}
+    \caption{Accuracy score for Logistic regression plotted against the number of epochs and batch sizes using Sigmoid activation. For this plot, $\eta = 5\times10^{-1}$ and $\lambda = 5\times10^{-3}$.}
+    \label{fig5}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.35]{C3.png}
+    \caption{Accuracy score for different regularization $\lambda$ and learning rate $\eta$ for logistic regression using Stochiastic Gradient Descent. The Tanh function was used as the activation function and the problem was solved using 20 epochs and a batch size of 100.}
+    \label{fig6}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.32]{C4.png}
+    \caption{Accuracy score for Logistic regression plotted against the number of epochs and batch sizes using Tanh activation. For this plot, $\eta = 1\times10^{-1}$ and $\lambda = 5\times10^{-3}$.}
+    \label{fig7}
+\end{figure}
+\vfill\null
+\subsubsection{Logistic Regression with PC Analysis}
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.35]{C5.png}
+    \caption{Accuracy score for different regularization $\lambda$ and learning rate $\eta$ for logistic regression using Stochiastic Gradient Descent. The Sigmoid function was used as the activation function and the problem was solved using 20 epochs, a batch size of 100, and 15 PC variables.}
+    \label{fig8}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.35]{c6.png}
+    \caption{Accuracy score for different regularization $\lambda$ and learning rate $\eta$ for logistic regression using Stochiastic Gradient Descent. The Tanh function was used as the activation function and the problem was solved using 20 epochs, a batch size of 100, and 15 PC variables.}
+    \label{fig9}
+\end{figure}
+\pagebreak
+\subsubsection{Neural Network Algorithm}
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.35]{c7.png}
+    \caption{Accuracy score for different regularization $\lambda$ and learning rate $\eta$ for the Neural Network algorithm. The Sigmoid function was used as the activation function and the problem was solved using 10 epochs, a batch size of 100, and two hidden layers with 10 neurons each.}
+    \label{fig10}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.35]{c8.png}
+    \caption{Accuracy score for different regularization $\lambda$ and learning rate $\eta$ for the Neural Network algorithm. The Sigmoid function was used as the activation function and the problem was solved using 10 epochs, a batch size of 100, and two hidden layers with 80 and 20 neurons respectively.}
+    \label{fig11}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.32]{C9.png}
+    \caption{Accuracy score for the Neural Network using Sigmoid activation plotted against the number of epochs and batches. Two hidden layers with 10 neurons each, $\eta = 1\times 10^1$, and $\lambda = 1\times 10^{-2}$ were used when solving.}
+    \label{fig12}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.35]{c10.png}
+    \caption{Accuracy score for different regularization $\lambda$ and learning rate $\eta$ for the Neural Network algorithm. The Tanh function was used as the activation function and the problem was solved using 10 epochs, a batch size of 100, and two hidden layers with 10 neurons each.}
+    \label{fig13}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.35]{c11.png}
+    \caption{Accuracy score for different regularization $\lambda$ and learning rate $\eta$ for the Neural Network algorithm. The Tanh function was used as the activation function and the problem was solved using 10 epochs, a batch size of 100, and two hidden layers with 80 and 20 neurons respectively.}
+    \label{fig14}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.32]{C12.png}
+    \caption{Accuracy score for the Neural Network using Tanh activation plotted against the number of epochs and batches. Two hidden layers with 10 neurons each, $\eta = 1\times 10^0$, and $\lambda = 1\times 10^{-1}$ were used when solving.}
+    \label{fig15}
+\end{figure}
+\subsection{The Franke Function}
+\subsubsection{Neural Network}
+For The Franke Function, results are obtained using different combinations of regularization
+parameters $\lambda$ and learning rates $\eta$ as in the previous classification case. All results are obtained using our own neural network code.
+
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=.35]{r1.png}
+    \caption{$R^2$-score for different regularization $\lambda$ and learning rate $\eta$ for the Franke function. These results were obtained using Sigmoid activation, 3 layers of 100, 50, and 20 neurons respectively, 50 epochs, and a batch size of 200. The grey squares indicate invalid values that resulted form numerical instability. }
+    \label{fig16}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=.35]{r2.png}
+    \caption{$MSE$ for different regularization $\lambda$ and learning rate $\eta$ for the Franke function. These results were obtained using Sigmoid activation, 3 layers of 100, 50, and 20 neurons respectively, 50 epochs, and a batch size of 200.  The presence of grey squares is explained in \ref{fig16}}
+    \label{fig17}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=.32]{fran1.png}
+    \caption{$MSE$ plotted against the number of epochs and batch sizes. These results were obtained using Sigmoid activation, 3 layers of 100, 50, and 20 neurons respectively, $\eta = 1\times 10^{-1}$, and $\lambda = 1\times 10^{-3}$.}
+    \label{fig18}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=.32]{R2.png}
+    \caption{$R^2$-score plotted against the number of epochs and batch sizes. These results were obtained using Sigmoid activation, 3 layers of 100, 50, and 20 neurons respectively, $\eta = 1\times 10^{-1}$, and $\lambda = 1\times 10^{-3}$.}
+    \label{fig19}
+\end{figure}
+
+
+\section{Discussion}
+\subsection{Logistic Regression on credit card data}
+We begin our analysis with Logistic Regression applied to the full credit card data set. In \ref{fig4} we find optimal the optimal hyperparameters to be $\eta = 5\times10^{-1}$ and $\lambda = 5\times10^{-3}$ when using Sigmoid activation for a fixed amount of epochs and batch sizes. We then perform an analysis of the accuracy score versus batch size and epochs for these optimal parameters which is shown in \ref{fig5}. This process is repeated for the Tanh activation in \ref{fig6} and \ref{fig7}. We see that model predicts the test data more accurately when the Sigmoid function is used. Due to the high dimensionality of the problem, we then explore the performance of the model when using the first 15 Principle Components of the the training data. The first 15 PCs contain 95$\%$ of the explained variance of the data. We again perform a hyperparameter grid search using the Tanh and Sigmoid functions and find that we lose quite a bit of accuracy by reducing dimensionality. \ref{fig8} and \ref{fig9} both show that the maximum accuracy of the 15 dimensional model is $75\%$ compared with $79\%$ for the full model.
+\subsection{Neural Network on credit card data}
+We being our analysis with a hyperparameter grid search using both the Sigmoid and Tanh activation as shown in \ref{fig10} and \ref{fig13}. Here we have used 2 layers of 10 neurons each and both yield a maximum accuracy score of $80\%$. Due to the somewhat mysterious nature of neural networks we tried various numbers of layer and neurons through a process of trial and error. We found that networks with 2 layers of 80 and 20 (\ref{fig11} and \ref{fig14}) neurons respectively produced similar results to the networks with 2 10 neuron layers. The added complexity did not contribute to increased accuracy and we therefore continued the study with the simpler models. \ref{fig15} and \ref{fig12} show the evolution of the accuracy score of the simpler models with respect to epochs and batch size. As was the case in logistic regression, we see that a larger batch size and number of epochs tends to give a better accuracy score.
+To ensure our neural network is providing reasonable results, we then compare our results against those of the SciKit-Learn MLPClassifier class.
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.35]{C13.png}
+    \caption{Accuracy score for different regularization $\lambda$ and learning rate $\eta$ for Neural Network trainand considering 10 epochs, batchsize equal to 100, two hidden layers with 10 neurons each using SciKit-learn's MLPClassifier algorithm.}
+    \label{fig20}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.32]{acc.png}
+    \caption{Accuracy score of SciKit-Learn's neural network using Sigmoid activation and plotted against the number of epochs and batch sizes with two hidden layers of 10 neurons each.}
+    \label{fig21}
+\end{figure}
+\pagebreak
+\ref{fig20} and \ref{fig21} show good agreement with our maximum accuracy score of $80\%$ for the network explored in \ref{fig10} and \ref{fig12}.
+
+\subsection{Neural Network on Franke Function}
+Our neural network performed quite well when fitting the Franke Function data. After a bit of trial and error we found that 3 hidden layers with 100, 50, and 20 neurons provided good results. As seen in \ref{fig16} and \ref{fig17} for 50 epochs and a batch size of 200 we obtain a maximum $R^2$-score of $.97$ and a minimum $MSE$ of $0.0029$. \ref{fig18} and \ref{fig19} both show that with a larger batch size and number of epochs, the fit becomes better. From Project 1, our best fit to the Franke Function data was found when using $OLS$ with a polynomial of degree 11. We obtained a minimum $MSE$ value of $2\times10^{-3}$ for this fit. Using the neural network with 100 epochs and a batch size of 64, we obtain a minimum $MSE$ of $1\times10^{-3}$. We also fitted the Franke function using SciKit-Learn's MLPRegressor class. The results are shown below in \ref{fig22} and \ref{fig23}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.35]{sklearn_r2.png}
+    \caption{$R^2$-score for different regularization $\lambda$ and learning rate $\eta$ for the Franke function. These results were obtained using Sigmoid activation, 3 layers of 100, 50, and 20 neurons respectively, 50 epochs, and a batch size of 200 with SciKit-Learn's MLPRegressor. The grey squares indicate invalid values that resulted form numerical instability.}
+    \label{fig22}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[scale=0.32]{sklearn_batchs.png}
+    \caption{$R^2$-score plotted against the number of epochs and batch sizes. These results were obtained using Sigmoid activation, 3 layers of 100, 50, and 20 neurons respectively, $\eta = 1\times 10^{-1}$, and $\lambda = 1\times 10^{-3}$  with SciKit-Learn's MLPRegressor.}
+    \label{fig23}
+\end{figure}
+
+Surprisingly, both our neural network and $OLS$ code outperformed SciKit-Learn's neural network regressor algorithm. From all the plots in this section, it is notable that for a fixed learning rate, there tends to be small changes in performance when using different regularization parameters. This highlights the learning rate's dominance in developing an accurate model.
+
+
+\section{Conclusions}
+In our analysis, we have shown that our neural network code performs well both when solving classification problems and linear regression problems. For the credit card data, our logistic regression code performed well when the whole data set was analyzed using both Tanh and Sigmoid activation functions. Our maximum accuracy score here was $79\%$.\\ While reducing dimensionality using PCA resulted in a computationally simpler problem, we considered the loss of accuracy to be too great. Our simple $10\times10$ neural network performed the best for both Sigmoid and Tanh activations with maximum accuracy sores of $80\%$. It was interesting to find that adding complexity in the layers did not result in noticeably better accuracy scores. We therefore assert that using the simple $10\times10$ neural network is ideal when analyzing the credit card data. Our neural network slightly outperformed our $OLS$ code from Project 1 with $MSE = 1\times10^{-3}$ compared to $MSE = 2\times10^{-3}$ for $OLS$. However, due to the computational simplicity of $OLS$ and the marginal $MSE$ reduction when using our neural network, we assert that our $OLS$ code is preferred when considering the Franke Function data.
+
+
+\subsection{Further research}
+These two data sets both present many potential options moving forwards. One area to explore would be a more empirical way of determining optimal hidden layers and neurons. We took a bit of a cavalier guess and check approach due to time constraints, but see potential in exploring these parameters more thoroughly. The Sigmoid and Tanh both behaved similarly, as is expected due to their similar shape. It would therefore be interesting to explore using the ReLU activation function in the hidden layers as it has a different behavior than the two activations we used.
+This study would be more complete if our neural network results would have been compared to other techniques like convolution neural networks and decision trees. \\
+\pagebreak
+\iffalse
+((From Figure ?? it is possible to study the performance of the neural network algorithm analysing the convergence to 0 of the $MSE$ for different batch sizes over 100 epochs.
+At the same time, this behaviour can be observed in Figure ??,  where we notice the gradual increase of $R^2$-score towards 1.))
+\fi
+
+
+\begin{thebibliography}{}
+\bibitem{} Hjorth-Jensen, Morten \,Lectures notes in FYS-STK4155.Data analysis and
+machine learning: Optimization   and   Gradient Methods,LogisticRegression,Neural   networks https://github.com/CompPhysics/MachineLearning
+
+\bibitem {}Pankaj Mehta, A high-bias, low-variance introduction to Machine Learning for physicists, May 29, 2019
+\bibitem {}Trevor Hastie, Robert Tibshirani, and JH Friedman. The elements of statistical learning: data
+mining, inference, and prediction. 2009.
+\bibitem{} Piccolo Domenico, Statistica, 21 Oct 2010.
+
+\bibitem{}Azzalini, Scarpa. Data Analysis and Data Mining: an introduction, 2012-04-23.
+\bibitem{a}Zani S., Cerioli A. Analisi dei dati e data mining per le decisioni aziendali, Giuffrè Editore, Milano, 2007.
+\end{thebibliography}
+
+\section{Appendix}
+All source code, data and figures can be found at the github repository: https://github.com/bruce-chappell/FYS4155/tree/master/project2
+
+\begin{table}[h]
+\centering
+\caption{Variables of the dataset with possible values}
+\label{tab:my-table}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{ccc}
+\hline
+\textit{\textbf{Variables}} & \textit{\textbf{Description}}                                                                                                                           & \textit{\textbf{Type ( with documented values)}}                                                                                                                                                                          \\ \hline
+LIMITBAL                   & \begin{tabular}[c]{@{}c@{}}Amount of given \\ credit in NT dollars\end{tabular}                                                                         & Continuous                                                                                                                                                                                                                \\ \hline
+SEX                         & Gender                                                                                                                                                  & \begin{tabular}[c]{@{}c@{}}Categorical-binary\\ (1=male, 2=female)\end{tabular}                                                                                                                                           \\ \hline
+EDUCATION                   & Level of education                                                                                                                                      & \begin{tabular}[c]{@{}c@{}}Categorical\\ (1=graduate school, 2=university, \\ 3=high school, 4=others)\end{tabular}                                                                                                       \\ \hline
+MARRIAGE                    & Marital status                                                                                                                                          & \begin{tabular}[c]{@{}c@{}}Categorical\\ (1=married, 2=single, 3=others)\end{tabular}                                                                                                                                     \\ \hline
+AGE                         & Age in years                                                                                                                                            & Discrete                                                                                                                                                                                                                  \\ \hline
+PAY1-PAY6                   & \begin{tabular}[c]{@{}c@{}}Repayment status respectively \\ in September,  August,  July,  \\ June,  May, April\end{tabular}                            & \begin{tabular}[c]{@{}c@{}}Categorical\\ (-1=pay duly, 1=payment delay for one month, \\ 2=payment delay for two months, …,\\ 8=payment delay for eight months,\\ 9=payment delay for nine months and above)\end{tabular} \\ \hline
+BILLAMT1-BILLAMT6           & \begin{tabular}[c]{@{}c@{}}Amount of bill statement \\ respectively in September,  \\ August, July,  June,  May, April\\ (NT dollar)\end{tabular}       & Continuous                                                                                                                                                                                                                \\ \hline
+PAYAMT1-PAYATM6             & \begin{tabular}[c]{@{}c@{}}Amount of previous payment\\  respectively in September, \\  August,  July,  June,  May, April\\
+(NT dollar)\end{tabular} & Continuous                                                                                                                                                                                                                \\ \hline
+default.payment.next.month  & Default payment in June                                                                                                                                 & \begin{tabular}[c]{@{}c@{}}Categorical-binary\\ (1=yes, 0=no)\end{tabular}                                                                                                                                                \\ \hline
+\end{tabular}%
+}
+\end{table}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.35]{correlation_matrix_outliers_removed.png}
+    \caption{Correlation matrix for Taiwan Credit Card Dataset}
+    \label{Correlation_matrix}
+\end{figure}
+\iffalse
+a specific resampling method is used on training data: $k$-fold cross-validation with $k=5$. It means that one fold of data is held back (as validation data) and the  others 4 are used to compute the accuracy scores. We use a set of $\eta$ and $\lambda$ parameters, a number of neurons for each hidden layer. In particular we first tried with 2 layers of 10 neurons each and then of 15.
+Then we hold other fold and build model using rest folds using same parameters as above. We do this for all the folds in order to obtain an Average Accuracy.
+Then we change the parameter values and repeat the process.
+This loop is repeated for different values of parameters and then the average accuracy is taken for all.
+We fix the mini-batch size equal to 20 and the number of epochs equal to 100.
+Then, once the best parameters found for each activation function (sigmoid and tanh), we detect the relations between the  accuracy score and the epochs in function of specific batch sizes.
+\fi
+\end{document}
